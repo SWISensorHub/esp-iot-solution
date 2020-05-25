@@ -9,3 +9,4 @@ IOT_SOLUTION_PATH ?= $(abspath $(shell pwd)/../../)
  
 include $(IOT_SOLUTION_PATH)/Makefile
 include $(IDF_PATH)/make/project.mk
+EXTRA_COMPONENT_DIRS += $(IOT_SOLUTION_PATH)/components/i2c_devices/sensor/hdc2010

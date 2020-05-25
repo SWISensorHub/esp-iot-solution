@@ -131,12 +131,24 @@ esp_err_t iot_hdc2010_get_interrupt_info(hdc2010_handle_t sensor, hdc2010_interr
         return ESP_FAIL;
     }
     info->drdy_status = (config_data & 0x80) && 1;
-    info->hh_status = (config_data & 0x40) && 1;
-    info->hl_status = (config_data & 0x20) && 1;
-    info->th_status = (config_data & 0x10) && 1;
-    info->tl_status = (config_data & 0x08) && 1;
+    info->th_status = (config_data & 0x40) && 1;
+    info->tl_status = (config_data & 0x20) && 1;
+    info->hh_status = (config_data & 0x10) && 1;
+    info->hl_status = (config_data & 0x08) && 1;
     return ESP_OK;
 }
+
+esp_err_t iot_hdc2010_set_interrupt_info(hdc2010_handle_t sensor, hdc2010_interrupt_info_t * info)
+{
+    uint8_t config_data = 0;
+    config_data |= info->drdy_status << 7;
+    config_data |= info->th_status << 6;
+    config_data |= info->tl_status << 5;
+    config_data |= info->hh_status << 4;
+    config_data |= info->hl_status << 3;
+    return iot_hdc2010_write_byte(sensor, HDC2010_INTERRUPT, config_data);
+}
+
 
 esp_err_t iot_hdc2010_set_interrupt_config(hdc2010_handle_t sensor, hdc2010_interrupt_config_t * config)
 {
@@ -145,8 +157,23 @@ esp_err_t iot_hdc2010_set_interrupt_config(hdc2010_handle_t sensor, hdc2010_inte
     config_data |= config->th_mask << 6;
     config_data |= config->tl_mask << 5;
     config_data |= config->hh_mask << 4;
-    config_data |= config->hh_mask << 3;
+    config_data |= config->hl_mask << 3;
     return iot_hdc2010_write_byte(sensor, HDC2010_INT_MASK, config_data);
+}
+
+esp_err_t iot_hdc2010_get_interrupt_config(hdc2010_handle_t sensor, hdc2010_interrupt_config_t * config)
+{
+    int config_data = 0;
+    config_data = iot_hdc2010_read_byte(sensor, HDC2010_INT_MASK);
+    if (_not_valid_return_val(config_data)) {
+        return ESP_FAIL;
+    }
+    config->drdy_mask = (config_data & 0x80) && 1;
+    config->th_mask = (config_data & 0x40) && 1;
+    config->tl_mask = (config_data & 0x20) && 1;
+    config->hh_mask = (config_data & 0x10) && 1;
+    config->hl_mask = (config_data & 0x08) && 1;
+    return ESP_OK;
 }
 
 float iot_hdc2010_get_max_temperature(hdc2010_handle_t sensor)
@@ -199,6 +226,77 @@ esp_err_t iot_hdc2010_set_temperature_threshold(hdc2010_handle_t sensor, float t
     return ESP_OK;
 }
 
+
+esp_err_t iot_hdc2010_set_temperature_high_threshold(hdc2010_handle_t sensor, float temperature_data)
+{
+    esp_err_t ret;
+	uint8_t temp_thresh_high;
+	// Verify user is not trying to set value outside bounds
+	if (temperature_data < -40)
+	{
+		temperature_data = -40;
+	}
+	else if (temperature_data > 125)
+	{
+		temperature_data = 125;
+	}
+	// Calculate value to load into register
+	temp_thresh_high= (uint8_t)(256 * (temperature_data + 40)/165);
+    ret = iot_hdc2010_write_byte(sensor, HDC2010_TEMP_THR_H, temp_thresh_high );
+    if (ret != ESP_OK) {
+        return ESP_FAIL;
+    }
+	return ret;
+}
+
+esp_err_t iot_hdc2010_set_temperature_low_threshold(hdc2010_handle_t sensor, float temperature_data)
+{
+    esp_err_t ret;
+ 	uint8_t temp_thresh_low;
+	// Verify user is not trying to set value outside bounds
+	if (temperature_data < -40)
+	{
+		temperature_data = -40;
+	}
+	else if (temperature_data > 125)
+	{
+		temperature_data = 125;
+	}
+	// Calculate value to load into register
+	temp_thresh_low= (uint8_t)(256 * (temperature_data + 40)/165);
+    ret = iot_hdc2010_write_byte(sensor, HDC2010_TEMP_THR_L, temp_thresh_low );
+    if (ret != ESP_OK) {
+        return ESP_FAIL;
+    }
+	return ret;
+}
+
+
+float iot_hdc2010_get_temperature_high_threshold(hdc2010_handle_t sensor)
+{
+    float temperature_data = 0;
+	float temperature_high_threshold = 0;
+    temperature_data = iot_hdc2010_read_byte(sensor, HDC2010_TEMP_THR_H);
+    if (_not_valid_return_val(temperature_data)) {
+        return (float)HDC2010_ERR_VAL;
+    }
+    temperature_high_threshold  = (((float) temperature_data * 165/256) - 40);
+    return temperature_high_threshold ;
+}
+   
+float iot_hdc2010_get_temperature_low_threshold(hdc2010_handle_t sensor)
+{
+    float temperature_data = 0;
+	float temperature_low_threshold = 0;
+    temperature_data = iot_hdc2010_read_byte(sensor, HDC2010_TEMP_THR_L);
+    if (_not_valid_return_val(temperature_data)) {
+        return (float)HDC2010_ERR_VAL;
+    }
+    temperature_low_threshold  = (((float) temperature_data * 165/256) - 40);
+    return temperature_low_threshold ;
+}
+   
+
 esp_err_t iot_hdc2010_set_humidity_threshold(hdc2010_handle_t sensor, float humidity_data)
 {
     esp_err_t ret;
@@ -215,10 +313,84 @@ esp_err_t iot_hdc2010_set_humidity_threshold(hdc2010_handle_t sensor, float humi
     return ESP_OK;
 }
 
+esp_err_t iot_hdc2010_set_humidity_high_threshold(hdc2010_handle_t sensor, float humid_high)
+{
+    esp_err_t ret;
+	
+	uint8_t humid_thresh;
+	
+	// Verify user is not trying to set value outside bounds
+	if (humid_high < 0)
+	{
+		humid_high = 0;
+	}
+	else if (humid_high > 100)
+	{
+		humid_high = 100;
+	}
+	
+	// Calculate value to load into register
+	humid_thresh = (uint8_t)(256 * (humid_high)/100);
+    ret = iot_hdc2010_write_byte(sensor, HDC2010_HUM_THR_H, humid_thresh);
+    if (ret != ESP_OK) {
+        return ESP_FAIL;
+    }
+    return ESP_OK;
+}
+
+esp_err_t iot_hdc2010_set_humidity_low_threshold(hdc2010_handle_t sensor, float humid_low)
+{
+    esp_err_t ret;
+	
+	uint8_t humid_thresh;
+	
+	// Verify user is not trying to set value outside bounds
+	if (humid_low < 0)
+	{
+		humid_low = 0;
+	}
+	else if (humid_low > 100)
+	{
+		humid_low = 100;
+	}
+	
+	// Calculate value to load into register
+	humid_thresh = (uint8_t)(256 * (humid_low)/100);
+    ret = iot_hdc2010_write_byte(sensor, HDC2010_HUM_THR_L, humid_thresh);
+    if (ret != ESP_OK) {
+        return ESP_FAIL;
+    }
+    return ESP_OK;
+}
+
+float iot_hdc2010_get_humidity_high_threshold(hdc2010_handle_t sensor)
+{
+    uint8_t humidity_data = 0;
+	float humidity_high_threshold = 0;
+    humidity_data = iot_hdc2010_read_byte(sensor, HDC2010_HUM_THR_H);
+    if (_not_valid_return_val(humidity_data)) {
+        return (float)HDC2010_ERR_VAL;
+    }
+    humidity_high_threshold  = ((float) humidity_data * 100/256);
+    return humidity_high_threshold ;
+}
+   
+float iot_hdc2010_get_humidity_low_threshold(hdc2010_handle_t sensor)
+{
+    uint8_t humidity_data = 0;
+	float humidity_low_threshold = 0;
+    humidity_data = iot_hdc2010_read_byte(sensor, HDC2010_HUM_THR_L);
+    if (_not_valid_return_val(humidity_data)) {
+        return (float)HDC2010_ERR_VAL;
+    }
+    humidity_low_threshold  = ((float) humidity_data * 100/256);
+    return humidity_low_threshold ;
+}
 esp_err_t iot_hdc2010_set_reset_and_drdy(hdc2010_handle_t sensor, hdc2010_reset_and_drdy_t * config)
 {
     uint8_t config_data = 0;
-    config_data |= config->heat_en << 7;
+    config_data |= config->soft_res << 7;
+	//config_data |= config->heat_en << 7;
     config_data |= config->output_rate << 4;
     config_data |= config->heat_en << 3;
     config_data |= config->int_en << 2;
@@ -264,26 +436,76 @@ int iot_hdc2010_get_device_id(hdc2010_handle_t sensor)
 static esp_err_t iot_hdc2010_init(hdc2010_handle_t sensor)
 {
     esp_err_t ret;
-    hdc2010_reset_and_drdy_t reset_config;
+    hdc2010_reset_and_drdy_t reset_config, normal_config;
     hdc2010_measurement_config_t measurement_config;
-    reset_config.soft_res = HDC2010_SOFT_RESET;
-    reset_config.output_rate = HDC2010_ODR_100;
+	hdc2010_interrupt_config_t interrupt_config;
+    hdc2010_interrupt_info_t interrupt_info;
+
+	static const char *TAG1 = "hdc2010";
+	reset_config.soft_res = HDC2010_SOFT_RESET;
+    reset_config.output_rate = HDC2010_ODR_000;
     reset_config.heat_en = HDC2010_HEATER_OFF;
-    reset_config.int_en = HDC2010_DRDY_INT_EN_HIGH_Z;
+	reset_config.int_en =  HDC2010_DRDY_INT_EN_HIGH_Z;
     reset_config.int_pol = HDC2010_INT_POL_ACTIVE_LOW;
     reset_config.int_mode = HDC2010_INT_LEVEL_SENSITIVE;
+	
+	normal_config.soft_res = HDC2010_NORMAL_OPERATION;
+    normal_config.output_rate = HDC2010_ODR_100;
+    normal_config.heat_en = HDC2010_HEATER_OFF;
+	normal_config.int_en =   HDC2010_DRDY_INT_EN_HIGH_Z;
+    normal_config.int_pol = HDC2010_INT_POL_ACTIVE_HIGH;
+    normal_config.int_mode = HDC2010_INT_LEVEL_SENSITIVE;
+	
     measurement_config.tres = HDC2010_TRES_BIT_14;
     measurement_config.hres = HDC2010_HRES_BIT_14;
     measurement_config.meas_conf = HDC2010_MEAS_CONF_HUM_AND_TEMP;
     measurement_config.meas_trig = HDC2010_MEAS_START;
+	
+    interrupt_config.drdy_mask = HDC2010_DRDY_MASK_INT_DISABLE;
+	interrupt_config.hh_mask = HDC2010_HH_MASK_INT_DISABLE;
+	interrupt_config.hl_mask = HDC2010_HL_MASK_INT_DISABLE;
+	interrupt_config.th_mask = HDC2010_TH_MASK_INT_DISABLE;
+	interrupt_config.tl_mask = HDC2010_TL_MASK_INT_DISABLE;
+	
     ret = iot_hdc2010_set_reset_and_drdy(sensor, &reset_config);
+	ESP_LOGI(TAG1, "step2");
     if (ret != ESP_OK) {
+		ESP_LOGI(TAG1, "step3");
         return ESP_FAIL;
     }
+	
+	
+	ESP_LOGI(TAG1, "hello2");
+	ret = iot_hdc2010_set_reset_and_drdy(sensor, &normal_config);
+	ESP_LOGI(TAG1, "step15");
+    if (ret != ESP_OK) {
+		ESP_LOGI(TAG1, "step16");
+        return ESP_FAIL;
+    }
+ 
+	ESP_LOGI(TAG1, "hello");
+	ret = iot_hdc2010_set_interrupt_config(sensor, &interrupt_config);
+	ESP_LOGI(TAG1, "step10");
+    if (ret != ESP_OK) {
+		ESP_LOGI(TAG1, "step11");
+        return ESP_FAIL;
+    }
+
     ret = iot_hdc2010_set_measurement_config(sensor, &measurement_config);
+	ESP_LOGI(TAG1, "step 6");
     if (ret != ESP_OK) {
+		ESP_LOGI(TAG1, "step 7");
         return ESP_FAIL;
     }
+	
+	ret =iot_hdc2010_get_interrupt_info(sensor, &interrupt_info);
+		ESP_LOGI(TAG1, "step 8");
+	if (ret != ESP_OK) {
+		ESP_LOGI(TAG1, "step 9");
+        return ESP_FAIL;
+    }
+   ESP_LOGI(TAG1, "interrupt intialization info: drdy_status_initial %d, th_status %d, tl_status %d, hh_status %d,hl_status %d",  interrupt_info.drdy_status, interrupt_info.th_status, interrupt_info.tl_status, interrupt_info.hh_status, interrupt_info.hl_status);
+
     return ESP_OK;
 }
 

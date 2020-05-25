@@ -69,19 +69,19 @@ typedef enum {
 typedef enum {
     HDC2010_HH_STATUS_NOT_READY = 0, /*!0 = No interrupt!   HH_STAUS is cleared to 0 when read*/
     HDC2010_HH_STATUS_READY = 1, /*! 1= interrupt !*/
-} hdc2010_hh_status_t; /*Temperature threshold HIGH Interrupt status*/
+} hdc2010_hh_status_t; /*Humidity threshold HIGH Interrupt status*/
 typedef enum {
     HDC2010_HL_STATUS_NOT_READY = 0, /*!0 = No interrupt!   HL_STAUS is cleared to 0 when read*/
     HDC2010_HL_STATUS_READY = 1, /*! 1= interrupt !*/
-} hdc2010_hl_status_t; /*Temperature threshold LOW Interrupt status*/
+} hdc2010_hl_status_t; /*Humidity threshold LOW Interrupt status*/
 typedef enum {
     HDC2010_TH_STATUS_NOT_READY = 0, /*!0 = No interrupt!   TH_STAUS is cleared to 0 when read*/
     HDC2010_TH_STATUS_READY = 1, /*! 1= interrupt !*/
-} hdc2010_th_status_t; /*Humidity threshold HIGH Interrupt status*/
+} hdc2010_th_status_t; /*Temperature threshold HIGH Interrupt status*/
 typedef enum {
     HDC2010_TL_STATUS_NOT_READY = 0, /*!0 = No interrupt!   TL_STAUS is cleared to 0 when read*/
     HDC2010_TL_STATUS_READY = 1, /*! 1= interrupt!*/
-} hdc2010_tl_status_t; /*Humidity threshold LOW Interrupt status*/
+} hdc2010_tl_status_t; /*Temperature threshold LOW Interrupt status*/
 
 /*Address 0x07 Interrupt Configuration*/
 typedef enum {
@@ -89,20 +89,20 @@ typedef enum {
     HDC2010_DRDY_MASK_INT_ENABLE = 1, /*1 = DaReady Interrupt generator enable*/
 } hdc2010_drdy_mask_t; /*DataReady Interrupt mask*/
 typedef enum {
-    HDC2010_TH_MASK_INT_ENABLE = 0, /*0 = Temperature high Interrupt generator enable*/
-    HDC2010_TH_MASK_INT_DISABLE = 1, /*1 = Temperature high Interrupt generator disable*/
+    HDC2010_TH_MASK_INT_DISABLE  = 0, /*0 = Temperature high Interrupt generator enable*/
+    HDC2010_TH_MASK_INT_ENABLE = 1, /*1 = Temperature high Interrupt generator disable*/
 } hdc2010_th_mask_t; /*Temperature threshold HIGH Interrupt mask*/
 typedef enum {
-    HDC2010_TL_MASK_INT_ENABLE = 0, /*0 = Temperature low Interrupt generator enable*/
-    HDC2010_TL_MASK_INT_DISABLE = 1, /*1 = Temperature low Interrupt generator disable*/
+    HDC2010_TL_MASK_INT_DISABLE  = 0, /*0 = Temperature low Interrupt generator enable*/
+    HDC2010_TL_MASK_INT_ENABLE = 1, /*1 = Temperature low Interrupt generator disable*/
 } hdc2010_tl_mask_t; /*Temperature threshold LOW Interrupt mask*/
 typedef enum {
-    HDC2010_HH_MASK_INT_ENABLE = 0, /*0 = Humidity high Interrupt generator enable*/
-    HDC2010_HH_MASK_INT_DISABLE = 1, /*1 = Humidity high Interrupt generator disable*/
+    HDC2010_HH_MASK_INT_DISABLE  = 0, /*0 = Humidity high Interrupt generator enable*/
+    HDC2010_HH_MASK_INT_ENABLE = 1, /*1 = Humidity high Interrupt generator disable*/
 } hdc2010_hh_mask_t; /*Humidity threshold HIGH Interrupt mask*/
 typedef enum {
-    HDC2010_HL_MASK_INT_ENABLE = 0, /*0 = Humidity low Interrupt generator enable*/
-    HDC2010_HL_MASK_INT_DISABLE = 1, /*1 = Humidity Low Interrupt generator disable*/
+    HDC2010_HL_MASK_INT_DISABLE = 0, /*0 = Humidity low Interrupt generator enable*/
+    HDC2010_HL_MASK_INT_ENABLE= 1, /*1 = Humidity Low Interrupt generator disable*/
 } hdc2010_hl_mask_t; /*Humidity threshold LOW Interrupt mask*/
 
 /* Address 0x0E Reset and DRDY/INT Configuration Field Descriptions */
@@ -161,8 +161,8 @@ typedef enum {
 
 typedef enum {
     HDC2010_MEAS_CONF_HUM_AND_TEMP = 0, /*00: Humidity + Temperature*/
-    HDC2010_MEAS_CONF_HUM_ONLY = 1, /*01: Temperature only*/
-    HDC2010_MEAS_CONF_TEMP_ONLY = 2, /*10: Humidity Only*/
+    HDC2010_MEAS_CONF_TEMP_ONLY = 1, /*01: Temperature only*/
+    HDC2010_MEAS_CONF_NA = 2, /*10: NA*/
     HDC2010_MEAS_CONF_NONE = 3, /*11: NA */
 } hdc2010_meas_conf_t; /*Measurement configuration*/
 
@@ -275,6 +275,18 @@ float iot_hdc2010_get_humidity(hdc2010_handle_t sensor);
 esp_err_t iot_hdc2010_get_interrupt_info(hdc2010_handle_t sensor, hdc2010_interrupt_info_t * info);
 
 /**
+ * @brief   set interrupt info
+ *
+ * @param   sensor device object handle of hdc2010
+ * @param   info hdc2010_interrupt_info_t info
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t iot_hdc2010_set_interrupt_info(hdc2010_handle_t sensor, hdc2010_interrupt_info_t * info);
+
+/**
  * @brief   set interrupt config
  *
  * @param   sensor device object handle of hdc2010
@@ -285,6 +297,18 @@ esp_err_t iot_hdc2010_get_interrupt_info(hdc2010_handle_t sensor, hdc2010_interr
  *     - ESP_FAIL Fail
  */
 esp_err_t iot_hdc2010_set_interrupt_config(hdc2010_handle_t sensor, hdc2010_interrupt_config_t * config);
+
+/**
+ * @brief   get interrupt config
+ *
+ * @param   sensor device object handle of hdc2010
+ * @param   config hdc2010_interrupt_config_t info
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t iot_hdc2010_get_interrupt_config(hdc2010_handle_t sensor, hdc2010_interrupt_config_t * config);
 
 /**
  * @brief   get maximum temperature
@@ -333,7 +357,7 @@ esp_err_t iot_hdc2010_set_temperature_offset(hdc2010_handle_t sensor, uint8_t of
 esp_err_t iot_hdc2010_set_humidity_offset(hdc2010_handle_t sensor, uint8_t offset_data);
 
 /**
- * @brief   set temperature threshold
+ * @brief   set  temperature threshold
  *
  * @param   sensor device object handle of hdc2010
  * @param   temperature_data temperature  value
@@ -343,6 +367,51 @@ esp_err_t iot_hdc2010_set_humidity_offset(hdc2010_handle_t sensor, uint8_t offse
  *     - ESP_FAIL Fail
  */
 esp_err_t iot_hdc2010_set_temperature_threshold(hdc2010_handle_t sensor, float temperature_data);
+
+/**
+ * @brief   set high temperature threshold
+ *
+ * @param   sensor device object handle of hdc2010
+ * @param   temperature_data temperature  value
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t iot_hdc2010_set_temperature_high_threshold(hdc2010_handle_t sensor, float temperature_data);
+
+/**
+ * @brief   set low temperature threshold
+ *
+ * @param   sensor device object handle of hdc2010
+ * @param   temperature_data temperature  value
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t iot_hdc2010_set_temperature_low_threshold(hdc2010_handle_t sensor, float temperature_data);
+/**
+ * @brief   get temperature high  threshold
+ *
+ * @param   sensor device object handle of hdc2010
+ * @param   temperature_data temperature  value
+ *
+ * @return
+ *     - get temperature high  threshold
+ */
+float iot_hdc2010_get_temperature_high_threshold(hdc2010_handle_t sensor);
+
+/**
+ * @brief   get temperature low  threshold
+ *
+ * @param   sensor device object handle of hdc2010
+ *
+ * @return
+ *     -    get temperature low  threshold
+ *    
+ */
+float iot_hdc2010_get_temperature_low_threshold(hdc2010_handle_t sensor);
 
 /**
  * @brief   set humidity threshold
@@ -357,6 +426,53 @@ esp_err_t iot_hdc2010_set_temperature_threshold(hdc2010_handle_t sensor, float t
 esp_err_t iot_hdc2010_set_humidity_threshold(hdc2010_handle_t sensor, float humidity_data);
 
 /**
+ * @brief   set high humidity threshold
+ *
+ * @param   sensor device object handle of hdc2010
+ * @param   high humidity  value
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t iot_hdc2010_set_humidity_high_threshold(hdc2010_handle_t sensor, float humid_high);
+
+/**
+ * @brief   set low humidity threshold
+ *
+ * @param   sensor device object handle of hdc2010
+ * @param   low humidity  value
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_FAIL Fail
+ */
+esp_err_t iot_hdc2010_set_humidity_low_threshold(hdc2010_handle_t sensor, float humid_low);
+
+/**
+ * @brief   get humidity high  threshold
+ *
+ * @param   sensor device object handle of hdc2010
+ *
+ * @return
+ *     - humidity high value
+ */
+
+
+float iot_hdc2010_get_humidity_high_threshold(hdc2010_handle_t sensor);
+
+/**
+ * @brief   get humidity low  threshold
+ *
+ * @param   sensor device object handle of hdc2010
+ *
+ * @return
+ *     - humidity low value
+ *    
+ */
+float iot_hdc2010_get_humidity_low_threshold(hdc2010_handle_t sensor);
+
+/**
  * @brief   set reset and drdy
  *
  * @param   sensor device object handle of hdc2010
@@ -367,6 +483,7 @@ esp_err_t iot_hdc2010_set_humidity_threshold(hdc2010_handle_t sensor, float humi
  *     - ESP_FAIL Fail
  */
 esp_err_t iot_hdc2010_set_reset_and_drdy(hdc2010_handle_t sensor, hdc2010_reset_and_drdy_t * config);
+
 
 /**
  * @brief   set measurement config
@@ -538,6 +655,7 @@ public:
      *     - ESP_FAIL Fail
      */
     esp_err_t set_temperature_threshold(float temperature_data);
+
 
     /**
      * @brief   set humidity threshold

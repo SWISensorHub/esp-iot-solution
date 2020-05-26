@@ -68,8 +68,8 @@
 #define _I2C_OP_ADDR(_addr, _op) ((_addr << 1) | _op)
 #define I2C_WRITE(_addr) _I2C_OP_ADDR(_addr, I2C_MASTER_WRITE)
 #define I2C_READ(_addr) _I2C_OP_ADDR(_addr, I2C_MASTER_READ)
-#define GPIO_INPUT_IO_0 5
-#define GPIO_INPUT_PIN_SEL 1ULL<<GPIO_INPUT_IO_0 
+#define GPIO_INPUT_IO 27
+#define GPIO_INPUT_PIN_SEL 1ULL<<GPIO_INPUT_IO 
 #define ESP_INTR_FLAG_DEFAULT 0
 
 static i2c_bus_handle_t i2c_bus = NULL;
@@ -130,7 +130,7 @@ void hdc2010_test()
 	float humidity_low_set = 20;
 	float humidity_high_set = 80;
 	float temperature_low_set = 40;
-	float temperature_high_set = 90;
+	float temperature_high_set = 2;
 	hdc2010_interrupt_info_t interrupt_info;
 	hdc2010_interrupt_config_t interrupt_config;
 	
@@ -139,7 +139,7 @@ void hdc2010_test()
 	interrupt_config.hl_mask = HDC2010_HL_MASK_INT_DISABLE;
 	interrupt_config.th_mask = HDC2010_TH_MASK_INT_ENABLE;
 	interrupt_config.tl_mask = HDC2010_TL_MASK_INT_ENABLE;
-	configASSERT(iot_hdc2010_set_interrupt_config(hdc2010, &interrupt_config) == ESP_OK); 
+	configASSERT(iot_hdc2010_set_interrupt_config(hdc2010, &interrupt_config) == ESP_OK);  
 	
 	iot_hdc2010_set_temperature_low_threshold(hdc2010, temperature_low_set);
 	iot_hdc2010_set_temperature_high_threshold(hdc2010, temperature_high_set);
@@ -240,7 +240,7 @@ void app_main()
 	gpio_config(&io_conf);
 	
 	//set gpio interrupt type for one pin_bit_mask
-	gpio_set_intr_type(GPIO_INPUT_IO_0, GPIO_INTR_ANYEDGE);
+	gpio_set_intr_type(GPIO_INPUT_IO, GPIO_INTR_ANYEDGE);
 	
 	//create queue to handle gpio event from isr
 	gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
@@ -252,13 +252,13 @@ void app_main()
 	gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
 	
 	//hook isr handler for specific gpio pin
-	gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler,(void*)GPIO_INPUT_IO_0);
+	gpio_isr_handler_add(GPIO_INPUT_IO, gpio_isr_handler,(void*)GPIO_INPUT_IO);
 	
 	
     hdc2010_test();
 	
 	//remove isr for gpio number
-	gpio_isr_handler_remove(GPIO_INPUT_IO_0);
+	gpio_isr_handler_remove(GPIO_INPUT_IO);
 
 
 

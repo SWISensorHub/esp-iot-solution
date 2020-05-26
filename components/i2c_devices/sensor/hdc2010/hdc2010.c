@@ -452,7 +452,7 @@ static esp_err_t iot_hdc2010_init(hdc2010_handle_t sensor)
 	normal_config.soft_res = HDC2010_NORMAL_OPERATION;
     normal_config.output_rate = HDC2010_ODR_100;
     normal_config.heat_en = HDC2010_HEATER_OFF;
-	normal_config.int_en =   HDC2010_DRDY_INT_EN_HIGH_Z;
+	normal_config.int_en =   HDC2010_DRDY_INT_EN_ENABLE;
     normal_config.int_pol = HDC2010_INT_POL_ACTIVE_HIGH;
     normal_config.int_mode = HDC2010_INT_LEVEL_SENSITIVE;
 	
